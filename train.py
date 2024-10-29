@@ -84,8 +84,7 @@ def train(train_loader, model, criterion, optimizer):
         pbar.update(1)
     pbar.close()
 
-    return OrderedDict([('loss', avg_meters['loss'].avg),
-                        ('iou', avg_meters['iou'].avg)])
+    return OrderedDict([('loss', avg_meters['loss'].avg), ('iou', avg_meters['iou'].avg)])
 
 
 def validate(val_loader, model, criterion):
@@ -127,24 +126,6 @@ def validate(val_loader, model, criterion):
 
 
 def main():
-    # config = vars(parse_args())
-
-    # if config['name'] is None:
-    #     if config['deep_supervision']:
-    #         config['name'] = '%s_%s_wDS' % (config['dataset'], config['arch'])
-    #     else:
-    #         config['name'] = '%s_%s_woDS' % (config['dataset'], config['arch'])
-    
-    # os.makedirs('models/%s' % config['name'], exist_ok=True)
-
-    # print('-' * 20)
-    # for key in config:
-    #     print('%s: %s' % (key, config[key]))
-    # print('-' * 20)
-
-    # with open('models/%s/config.yml' % config['name'], 'w') as f:
-    #     yaml.dump(config, f)
-
     # define loss function (criterion)
     criterion = BCEDiceLoss()
 
