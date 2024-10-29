@@ -17,42 +17,23 @@ from metrics import iou_score
 from utils import AverageMeter
 from albumentations import RandomRotate90,Resize
 import time
-from archs import UNext
+from model import UNext
 
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--name', default=None,
-                        help='model name')
-
-    args = parser.parse_args()
-
-    return args
-
+# Set device
+if torch.backends.mps.is_available():
+    device = torch.device('mps')
+elif torch.cuda.is_available():
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')
 
 def main():
-    args = parse_args()
-
-    with open('models/%s/config.yml' % args.name, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-
-    print('-'*20)
-    for key in config.keys():
-        print('%s: %s' % (key, str(config[key])))
-    print('-'*20)
-
-    cudnn.benchmark = True
-
-    print("=> creating model %s" % config['arch'])
-    model = archs.__dict__[config['arch']](config['num_classes'],
-                                           config['input_channels'],
-                                           config['deep_supervision'])
-
-    model = model.cuda()
+    # Load model
+    model = UNext(num_classes=1)
+    model = model.to(device)
 
     # Data loading code
-    img_ids = glob(os.path.join('inputs', config['dataset'], 'images', '*' + config['img_ext']))
+    img_ids = glob(os.path.join('busi', 'images', '*' + config['img_ext']))
     img_ids = [os.path.splitext(os.path.basename(p))[0] for p in img_ids]
 
     _, val_img_ids = train_test_split(img_ids, test_size=0.2, random_state=41)

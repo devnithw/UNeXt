@@ -23,15 +23,22 @@ from model import UNext
 
 # Stop Albumentation warning
 import warnings
-warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore")
 
 # Set device
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+if torch.backends.mps.is_available():
+    device = torch.device('mps')
+elif torch.cuda.is_available():
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')
+
+# Experiment name
+EXP_NAME = "dev-2"
 
 # Dataset
 DATA_DIR = 'busi'
 BATCH_SIZE = 16
-
 
 # Hyper parameters
 NUM_CLASSES = 1
@@ -222,7 +229,7 @@ def main():
 
     # Training Loop
     for epoch in range(EPOCHS):
-        print('Epoch [%d/%d]' % (epoch, EPOCHS))
+        print('Epoch: [%d/%d]' % (epoch, EPOCHS))
 
         # Train for one epoch
         train_log = train(train_loader, model, criterion, optimizer)
@@ -254,9 +261,9 @@ def main():
 
         # Save checkpoint
         if val_log['iou'] > best_iou:
-            torch.save(model.state_dict(), 'models/model.pth')
+            torch.save(model.state_dict(), f'models/model-{EXP_NAME}.pth')
             best_iou = val_log['iou']
-            print("=> saved best model")
+            print("=> Saved best model")
             trigger = 0
 
         torch.cuda.empty_cache()
