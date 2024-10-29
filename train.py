@@ -16,18 +16,27 @@ from torch.optim import lr_scheduler
 from tqdm import tqdm
 from albumentations import RandomRotate90,Resize
 import model
-import loss
+from loss import BCEDiceLoss
 from dataset import Dataset
 from metrics import iou_score
 from utils import AverageMeter, str2bool
 from model import UNext
 
+# Set device
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-ARCH_NAMES = model.__all__
-LOSS_NAMES = losses.__all__
-LOSS_NAMES.append('BCEWithLogitsLoss')
+# Directories
+DATA_DIR = 'busi'
 
+# Hyper parameters
 
+# Optimizers
+OPTIMIZER = 'Adam'
+SCHEDULER = 'CosineAnnealingLR'
+LEARNING_RATE = 1e-3
+W_DECAY = 1e-4
+MOMENTUM = 0.9
+NESTEROV = False
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -51,13 +60,6 @@ def parse_args():
     parser.add_argument('--input_h', default=256, type=int,
                         help='image height')
     
-    # loss
-    parser.add_argument('--loss', default='BCEDiceLoss',
-                        choices=LOSS_NAMES,
-                        help='loss: ' +
-                        ' | '.join(LOSS_NAMES) +
-                        ' (default: BCEDiceLoss)')
-    
     # dataset
     parser.add_argument('--dataset', default='isic',
                         help='dataset name')
@@ -67,34 +69,34 @@ def parse_args():
                         help='mask file extension')
 
     # optimizer
-    parser.add_argument('--optimizer', default='Adam',
-                        choices=['Adam', 'SGD'],
-                        help='loss: ' +
-                        ' | '.join(['Adam', 'SGD']) +
-                        ' (default: Adam)')
-    parser.add_argument('--lr', '--learning_rate', default=1e-3, type=float,
-                        metavar='LR', help='initial learning rate')
-    parser.add_argument('--momentum', default=0.9, type=float,
-                        help='momentum')
-    parser.add_argument('--weight_decay', default=1e-4, type=float,
-                        help='weight decay')
-    parser.add_argument('--nesterov', default=False, type=str2bool,
-                        help='nesterov')
+    # parser.add_argument('--optimizer', default='Adam',
+    #                     choices=['Adam', 'SGD'],
+    #                     help='loss: ' +
+    #                     ' | '.join(['Adam', 'SGD']) +
+    #                     ' (default: Adam)')
+    # parser.add_argument('--lr', '--learning_rate', default=1e-3, type=float,
+    #                     metavar='LR', help='initial learning rate')
+    # parser.add_argument('--momentum', default=0.9, type=float,
+    #                     help='momentum')
+    # parser.add_argument('--weight_decay', default=1e-4, type=float,
+    #                     help='weight decay')
+    # parser.add_argument('--nesterov', default=False, type=str2bool,
+    #                     help='nesterov')
 
     # scheduler
-    parser.add_argument('--scheduler', default='CosineAnnealingLR',
-                        choices=['CosineAnnealingLR', 'ReduceLROnPlateau', 'MultiStepLR', 'ConstantLR'])
-    parser.add_argument('--min_lr', default=1e-5, type=float,
-                        help='minimum learning rate')
-    parser.add_argument('--factor', default=0.1, type=float)
-    parser.add_argument('--patience', default=2, type=int)
-    parser.add_argument('--milestones', default='1,2', type=str)
-    parser.add_argument('--gamma', default=2/3, type=float)
-    parser.add_argument('--early_stopping', default=-1, type=int,
-                        metavar='N', help='early stopping (default: -1)')
-    parser.add_argument('--cfg', type=str, metavar="FILE", help='path to config file', )
+    # parser.add_argument('--scheduler', default='CosineAnnealingLR',
+    #                     choices=['CosineAnnealingLR', 'ReduceLROnPlateau', 'MultiStepLR', 'ConstantLR'])
+    # parser.add_argument('--min_lr', default=1e-5, type=float,
+    #                     help='minimum learning rate')
+    # parser.add_argument('--factor', default=0.1, type=float)
+    # parser.add_argument('--patience', default=2, type=int)
+    # parser.add_argument('--milestones', default='1,2', type=str)
+    # parser.add_argument('--gamma', default=2/3, type=float)
+    # parser.add_argument('--early_stopping', default=-1, type=int,
+    #                     metavar='N', help='early stopping (default: -1)')
+    # parser.add_argument('--cfg', type=str, metavar="FILE", help='path to config file', )
 
-    parser.add_argument('--num_workers', default=4, type=int)
+    # parser.add_argument('--num_workers', default=4, type=int)
 
     config = parser.parse_args()
 
@@ -193,66 +195,64 @@ def validate(config, val_loader, model, criterion):
 def main():
     config = vars(parse_args())
 
-    if config['name'] is None:
-        if config['deep_supervision']:
-            config['name'] = '%s_%s_wDS' % (config['dataset'], config['arch'])
-        else:
-            config['name'] = '%s_%s_woDS' % (config['dataset'], config['arch'])
+    # if config['name'] is None:
+    #     if config['deep_supervision']:
+    #         config['name'] = '%s_%s_wDS' % (config['dataset'], config['arch'])
+    #     else:
+    #         config['name'] = '%s_%s_woDS' % (config['dataset'], config['arch'])
     
-    os.makedirs('models/%s' % config['name'], exist_ok=True)
+    # os.makedirs('models/%s' % config['name'], exist_ok=True)
 
-    print('-' * 20)
-    for key in config:
-        print('%s: %s' % (key, config[key]))
-    print('-' * 20)
+    # print('-' * 20)
+    # for key in config:
+    #     print('%s: %s' % (key, config[key]))
+    # print('-' * 20)
 
-    with open('models/%s/config.yml' % config['name'], 'w') as f:
-        yaml.dump(config, f)
+    # with open('models/%s/config.yml' % config['name'], 'w') as f:
+    #     yaml.dump(config, f)
 
     # define loss function (criterion)
-    if config['loss'] == 'BCEWithLogitsLoss':
-        criterion = nn.BCEWithLogitsLoss().cuda()
-    else:
-        criterion = losses.__dict__[config['loss']]().cuda()
-
-    cudnn.benchmark = True
+    criterion = BCEDiceLoss()
 
     # create model
-    model = archs.__dict__[config['arch']](config['num_classes'],
-                                           config['input_channels'],
-                                           config['deep_supervision'])
+    model = UNext()
+    model = model.to(device)
 
-    model = model.cuda()
-
+    # Get model parameters
     params = filter(lambda p: p.requires_grad, model.parameters())
-    if config['optimizer'] == 'Adam':
+
+    # Set optimizer and scheduler
+    if OPTIMIZER == 'Adam':
         optimizer = optim.Adam(
-            params, lr=config['lr'], weight_decay=config['weight_decay'])
-    elif config['optimizer'] == 'SGD':
-        optimizer = optim.SGD(params, lr=config['lr'], momentum=config['momentum'],
-                              nesterov=config['nesterov'], weight_decay=config['weight_decay'])
+            params, lr=LEARNING_RATE, weight_decay=W_DECAY)
+    elif OPTIMIZER == 'SGD':
+        optimizer = optim.SGD(params, lr=LEARNING_RATE, momentum=MOMENTUM,
+                              nesterov=NESTEROV, weight_decay=W_DECAY)
     else:
         raise NotImplementedError
 
-    if config['scheduler'] == 'CosineAnnealingLR':
+    # Set scheduler
+    if SCHEDULER == 'CosineAnnealingLR': # Default
         scheduler = lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=config['epochs'], eta_min=config['min_lr'])
-    elif config['scheduler'] == 'ReduceLROnPlateau':
+    elif SCHEDULER == 'ReduceLROnPlateau':
         scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, factor=config['factor'], patience=config['patience'],
                                                    verbose=1, min_lr=config['min_lr'])
-    elif config['scheduler'] == 'MultiStepLR':
+    elif SCHEDULER == 'MultiStepLR':
         scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[int(e) for e in config['milestones'].split(',')], gamma=config['gamma'])
-    elif config['scheduler'] == 'ConstantLR':
+    elif SCHEDULER == 'ConstantLR':
         scheduler = None
     else:
         raise NotImplementedError
 
-    # Data loading code
-    img_ids = glob(os.path.join('inputs', config['dataset'], 'images', '*' + config['img_ext']))
+    # Load data
+    img_ids = glob(os.path.join(DATA_DIR, 'images', '*' + 'png'))
     img_ids = [os.path.splitext(os.path.basename(p))[0] for p in img_ids]
 
+    # Split indices
     train_img_ids, val_img_ids = train_test_split(img_ids, test_size=0.2, random_state=41)
 
+    # Apply transform
     train_transform = Compose([
         RandomRotate90(),
         transforms.Flip(),
