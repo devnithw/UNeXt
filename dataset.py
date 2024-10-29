@@ -20,9 +20,6 @@ class BUSIDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         # Get image ID
         img_id = self.img_ids[idx]
-        print(f"img_id: {img_id}")
-        print(f"img_dir: {self.img_dir}")
-        print(f"mask_dir: {self.mask_dir}")
 
         # Load image from Open CV
         img = cv2.imread(os.path.join(self.img_dir, img_id + self.img_ext))
