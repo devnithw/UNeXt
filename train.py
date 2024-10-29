@@ -1,134 +1,68 @@
-import argparse
 import os
 from collections import OrderedDict
 import glob
-
 import torch
 from torchvision import transforms
 import pandas as pd
-import torch
 import torch.backends.cudnn as cudnn
-import torch.nn as nn
 import torch.optim as optim
-import yaml
 from sklearn.model_selection import train_test_split
 from torch.optim import lr_scheduler
 from tqdm import tqdm
 import models
+import yaml
 import losses
 from dataset import BUSIDataset
 from metrics import iou_score
 from utils import AverageMeter, str2bool
 from albumentations.augmentations import transforms
 from albumentations.core.composition import Compose, OneOf
-from albumentations import RandomRotate90,Resize
+from albumentations import RandomRotate90, Resize, HorizontalFlip
 
-#Global variables
-MODEL_NAME = 'UNext'
+# Load configuration from YAML
+with open('config.yaml', 'r') as f:
+    config = yaml.safe_load(f)
+
+# Assign loaded configuration to variables
+MODEL_NAME = config['model_name']
 LOSS_FUNCTION = losses.BCEDiceLoss()
 MODEL = models.UNext
-BATCH_SIZE = 16
-NUM_WORKERS = 0 # os.cpu_count()
-NUM_CLASSES = 1
-DEEP_SUPERVISION = False
-INPUT_CHANNELS = 3
-OPTIMIZER = 'Adam'
-LEARNING_RATE = 1e-3
-WEIGHT_DECAY = 1e-4
-MOMENTUM = 0.9
-SCHEDULER = 'CosineAnnealingLR'
-EPOCHS = 100
-MIN_LEARNING_RATE = 1e-5
-SCHEDULER_FACTOR = 0.1
-SCHEDULER_PATIENCE = 2
-SCHEDULER_MILESTONES = '1,2'
-SCHEDULER_GAMMA = 2/3
-DATA_PATH = r"D:\Projects\UNeXt\datasets\busi"
-EARLY_STOPPING = -1 # -1 for no early stopping
-INPUT_W = 256
-INPUT_H = 256
+BATCH_SIZE = config['batch_size']
+NUM_WORKERS = config['num_workers']
+NUM_CLASSES = config['num_classes']
+DEEP_SUPERVISION = config['deep_supervision']
+INPUT_CHANNELS = config['input_channels']
+OPTIMIZER = config['optimizer']
+LEARNING_RATE = config['learning_rate']
+WEIGHT_DECAY = config['weight_decay']
+MOMENTUM = config['momentum']
+SCHEDULER = config['scheduler']
+EPOCHS = config['epochs']
+MIN_LEARNING_RATE = float(config['min_learning_rate'])
+SCHEDULER_FACTOR = config['scheduler_factor']
+SCHEDULER_PATIENCE = config['scheduler_patience']
+SCHEDULER_MILESTONES = config['scheduler_milestones']
+SCHEDULER_GAMMA = config['scheduler_gamma']
+DATA_PATH = config['data_path']
+EARLY_STOPPING = config['early_stopping']
+INPUT_W = config['input_w']
+INPUT_H = config['input_h']
+TRANSFORM_FLIP_PROBABILITY = config['transform_flip_probability']
+
+MODEL_SAVE_PATH = f'models/{MODEL_NAME}/model2.pth'
 
 
-
+# check the model name and losses
+'''
 ARCH_NAMES = models.__all__
 LOSS_NAMES = losses.__all__
 LOSS_NAMES.append('BCEWithLogitsLoss')
+'''
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--name', default=None,
-                        help='model name: (default: arch+timestamp)')
-    parser.add_argument('--epochs', default=100, type=int, metavar='N',
-                        help='number of total epochs to run')
-    parser.add_argument('-b', '--batch_size', default=16, type=int,
-                        metavar='N', help='mini-batch size (default: 16)')
-    
-    # model
-    parser.add_argument('--arch', '-a', metavar='ARCH', default='UNext')
-    parser.add_argument('--deep_supervision', default=False, type=str2bool)
-    parser.add_argument('--input_channels', default=3, type=int,
-                        help='input channels')
-    parser.add_argument('--num_classes', default=1, type=int,
-                        help='number of classes')
-    parser.add_argument('--input_w', default=256, type=int,
-                        help='image width')
-    parser.add_argument('--input_h', default=256, type=int,
-                        help='image height')
-    
-    # loss
-    parser.add_argument('--loss', default='BCEDiceLoss',
-                        choices=LOSS_NAMES,
-                        help='loss: ' +
-                        ' | '.join(LOSS_NAMES) +
-                        ' (default: BCEDiceLoss)')
-    
-    # dataset
-    parser.add_argument('--dataset', default='isic',
-                        help='dataset name')
-    parser.add_argument('--img_ext', default='.png',
-                        help='image file extension')
-    parser.add_argument('--mask_ext', default='.png',
-                        help='mask file extension')
-
-    # optimizer
-    parser.add_argument('--optimizer', default='Adam',
-                        choices=['Adam', 'SGD'],
-                        help='loss: ' +
-                        ' | '.join(['Adam', 'SGD']) +
-                        ' (default: Adam)')
-    parser.add_argument('--lr', '--learning_rate', default=1e-3, type=float,
-                        metavar='LR', help='initial learning rate')
-    parser.add_argument('--momentum', default=0.9, type=float,
-                        help='momentum')
-    parser.add_argument('--weight_decay', default=1e-4, type=float,
-                        help='weight decay')
-    parser.add_argument('--nesterov', default=False, type=str2bool,
-                        help='nesterov')
-
-    # scheduler
-    parser.add_argument('--scheduler', default='CosineAnnealingLR',
-                        choices=['CosineAnnealingLR', 'ReduceLROnPlateau', 'MultiStepLR', 'ConstantLR'])
-    parser.add_argument('--min_lr', default=1e-5, type=float,
-                        help='minimum learning rate')
-    parser.add_argument('--factor', default=0.1, type=float)
-    parser.add_argument('--patience', default=2, type=int)
-    parser.add_argument('--milestones', default='1,2', type=str)
-    parser.add_argument('--gamma', default=2/3, type=float)
-    parser.add_argument('--early_stopping', default=-1, type=int,
-                        metavar='N', help='early stopping (default: -1)')
-    parser.add_argument('--cfg', type=str, metavar="FILE", help='path to config file', )
-
-    parser.add_argument('--num_workers', default=4, type=int)
-
-    config = parser.parse_args()
-
-    return config
-
 # args = parser.parse_args()
-def train(config, train_loader, model, criterion, optimizer):
+def train(train_loader, model, criterion, optimizer):
     avg_meters = {'loss': AverageMeter(),
                   'iou': AverageMeter()}
 
@@ -172,7 +106,7 @@ def train(config, train_loader, model, criterion, optimizer):
                         ('iou', avg_meters['iou'].avg)])
 
 
-def validate(config, val_loader, model, criterion):
+def validate(val_loader, model, criterion):
     avg_meters = {'loss': AverageMeter(),
                   'iou': AverageMeter(),
                    'dice': AverageMeter()}
@@ -218,7 +152,6 @@ def validate(config, val_loader, model, criterion):
 
 
 def main():
-    config = vars(parse_args())
 
     
     os.makedirs('models/%s' % MODEL_NAME, exist_ok=True)
@@ -236,19 +169,15 @@ def main():
 
     cudnn.benchmark = True
 
-    # create model
-    model = models.__dict__[config['arch']](config['num_classes'],
-                                           config['input_channels'],
-                                           DEEP_SUPERVISION)
-    
+    # create model    
     model = MODEL(num_classes=NUM_CLASSES, deep_supervision=DEEP_SUPERVISION, input_channels=INPUT_CHANNELS)
     model = model.to(device)
 
     params = filter(lambda p: p.requires_grad, model.parameters())
     
-    if config['optimizer'] == 'Adam':
+    if OPTIMIZER == 'Adam':
         optimizer = optim.Adam(params=params, lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
-    elif config['optimizer'] == 'SGD':
+    elif OPTIMIZER == 'SGD':
         optimizer = optim.SGD(params, lr=LEARNING_RATE, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY)
     else:
         raise NotImplementedError
@@ -274,7 +203,7 @@ def main():
 
     train_transform = Compose([
         RandomRotate90(),
-        #transforms.Flip(),
+        HorizontalFlip(p=TRANSFORM_FLIP_PROBABILITY),
         Resize(INPUT_H, INPUT_W),
         transforms.Normalize(),
     ])
@@ -329,13 +258,13 @@ def main():
 
     best_iou = 0
     trigger = 0
-    for epoch in range(EPOCHS):
+    for epoch in range(1,EPOCHS+1):
         print('Epoch [%d/%d]' % (epoch, EPOCHS))
 
         # train for one epoch
-        train_log = train(config, train_loader, model, criterion, optimizer)
+        train_log = train(train_loader, model, criterion, optimizer)
         # evaluate on validation set
-        val_log = validate(config, val_loader, model, criterion)
+        val_log = validate(val_loader, model, criterion)
 
         if SCHEDULER == 'CosineAnnealingLR':
             scheduler.step()
@@ -346,21 +275,20 @@ def main():
               % (train_log['loss'], train_log['iou'], val_log['loss'], val_log['iou']))
 
         log['epoch'].append(epoch)
-        log['lr'].append(config['lr'])
+        log['lr'].append(LEARNING_RATE)
         log['loss'].append(train_log['loss'])
         log['iou'].append(train_log['iou'])
         log['val_loss'].append(val_log['loss'])
         log['val_iou'].append(val_log['iou'])
         log['val_dice'].append(val_log['dice'])
 
-        pd.DataFrame(log).to_csv('models/%s/log.csv' %
+        pd.DataFrame(log).to_csv('models/%s/log_with_flip.csv' %
                                  MODEL_NAME, index=False)
 
         trigger += 1
 
         if val_log['iou'] > best_iou:
-            torch.save(model.state_dict(), 'models/%s/model.pth' %
-                       MODEL_NAME)
+            torch.save(model.state_dict(), MODEL_SAVE_PATH)
             best_iou = val_log['iou']
             print("=> saved best model")
             trigger = 0
