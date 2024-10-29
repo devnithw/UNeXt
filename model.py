@@ -5,7 +5,7 @@ from torchvision.utils import save_image
 import torch.nn.functional as F
 from utils import *
 
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from timm.layers import DropPath, to_2tuple, trunc_normal_
 import math
 import pdb
 
@@ -180,7 +180,7 @@ class OverlapPatchEmbed(nn.Module):
 class UNext(nn.Module):
 
     ## Conv 3 + MLP 2 + shifted MLP
-    def __init__(self,  num_classes, input_channels=3, deep_supervision=False,img_size=224, patch_size=16, in_chans=3,  embed_dims=[ 128, 160, 256],
+    def __init__(self,  num_classes, input_channels=3, img_size=224, patch_size=16, in_chans=3,  embed_dims=[ 128, 160, 256],
                  num_heads=[1, 2, 4, 8], mlp_ratios=[4, 4, 4, 4], qkv_bias=False, qk_scale=None, drop_rate=0.,
                  attn_drop_rate=0., drop_path_rate=0., norm_layer=nn.LayerNorm,
                  depths=[1, 1, 1], sr_ratios=[8, 4, 2, 1], **kwargs):
@@ -314,7 +314,7 @@ class UNext_S(nn.Module):
 
     ## Conv 3 + MLP 2 + shifted MLP w less parameters
     
-    def __init__(self,  num_classes, input_channels=3, deep_supervision=False,img_size=224, patch_size=16, in_chans=3,  embed_dims=[32, 64, 128, 512],
+    def __init__(self,  num_classes, input_channels=3, img_size=224, patch_size=16, in_chans=3,  embed_dims=[32, 64, 128, 512],
                  num_heads=[1, 2, 4, 8], mlp_ratios=[4, 4, 4, 4], qkv_bias=False, qk_scale=None, drop_rate=0.,
                  attn_drop_rate=0., drop_path_rate=0., norm_layer=nn.LayerNorm,
                  depths=[1, 1, 1], sr_ratios=[8, 4, 2, 1], **kwargs):

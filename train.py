@@ -21,6 +21,10 @@ from metrics import iou_score
 from utils import AverageMeter, str2bool
 from model import UNext
 
+# Stop Albumentation warning
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
 # Set device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -32,7 +36,6 @@ BATCH_SIZE = 16
 # Hyper parameters
 NUM_CLASSES = 1
 EPOCHS = 100
-MODEL_NAME = "unext_dev"
 INPUT_CHANNELS = 3
 
 
@@ -130,7 +133,7 @@ def main():
     criterion = BCEDiceLoss()
 
     # create model
-    model = UNext()
+    model = UNext(num_classes=NUM_CLASSES)
     model = model.to(device)
 
     # Get model parameters
@@ -162,7 +165,6 @@ def main():
     # Apply transforms
     train_transform = Compose([
         RandomRotate90(),
-        transforms.Flip(),
         Resize(IMG_HEIGHT, IMG_WIDTH),
         transforms.Normalize(),
     ])
@@ -246,13 +248,13 @@ def main():
         log['val_dice'].append(val_log['dice'])
 
         # Save details to pandas dataframe and csv
-        pd.DataFrame(log).to_csv('models/%s/log.csv' % MODEL_NAME, index=False)
+        pd.DataFrame(log).to_csv('models/log.csv', index=False)
         
         trigger += 1
 
         # Save checkpoint
         if val_log['iou'] > best_iou:
-            torch.save(model.state_dict(), 'models/%s/model.pth' % MODEL_NAME)
+            torch.save(model.state_dict(), 'models/model.pth')
             best_iou = val_log['iou']
             print("=> saved best model")
             trigger = 0
