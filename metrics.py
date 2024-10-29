@@ -18,7 +18,7 @@ def iou_score(output, target):
     dice = (2* iou) / (iou+1)
     return iou, dice
 
-
+# try medpy implementation of the dice loss
 def dice_coef(output, target):
     smooth = 1e-5
 
