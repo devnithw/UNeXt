@@ -10,7 +10,7 @@ import torch.optim as optim
 from sklearn.model_selection import train_test_split
 from torch.optim import lr_scheduler
 from tqdm import tqdm
-import models
+import model
 import yaml
 import losses
 from dataset import BUSIDataset
@@ -40,7 +40,7 @@ LEARNING_RATE = args.learning_rate
 BATCH_SIZE = args.batch_size
 MODEL_NAME = config['model_name']
 LOSS_FUNCTION = losses.BCEDiceLoss()
-MODEL = models.UNext
+MODEL = model.UNext
 NUM_WORKERS = config['num_workers']
 NUM_CLASSES = config['num_classes']
 DEEP_SUPERVISION = config['deep_supervision']

@@ -8,7 +8,7 @@ from albumentations.augmentations import transforms
 from albumentations.core.composition import Compose
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
-import models
+import model
 import argparse
 from dataset import BUSIDataset
 from metrics import iou_score
@@ -16,7 +16,7 @@ from utils import AverageMeter
 from albumentations import RandomRotate90,Resize, HorizontalFlip
 import time
 import losses
-from models import UNext
+from model import UNext
 
 # Set device
 if torch.cuda.is_available():
@@ -33,7 +33,7 @@ with open('config.yaml', 'r') as f:
 # Assign loaded configuration to variables
 MODEL_NAME = config['model_name']
 LOSS_FUNCTION = losses.BCEDiceLoss()
-MODEL = models.UNext
+MODEL = model.UNext
 BATCH_SIZE = config['batch_size']
 NUM_WORKERS = config['num_workers']
 NUM_CLASSES = config['num_classes']
