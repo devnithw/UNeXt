@@ -58,7 +58,7 @@ OUT_PATH = config['output_path']
 # Argument parsing
 parser = argparse.ArgumentParser(description='Validation script for BUSI Dataset')
 parser.add_argument('--name', type=str, required=True, help='Name of the experiment')
-parser.add_argument('--load_model', type=str, help='Number of epochs to train')
+parser.add_argument('--load_model', type=str, required=True, help='Number of epochs to train')
 
 args = parser.parse_args()
 

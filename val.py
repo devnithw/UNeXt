@@ -62,7 +62,7 @@ OUT_PATH = config['output_path']
 # Argument parsing
 parser = argparse.ArgumentParser(description='Validation script for BUSI Dataset')
 parser.add_argument('--name', type=str, required=True, help='Name of the experiment')
-parser.add_argument('--load_model', type=str, help='Number of epochs to train')
+parser.add_argument('--load_model', required=True, type=str, help='Name of the model')
 
 args = parser.parse_args()
 
@@ -138,7 +138,7 @@ def main():
 
             for i in range(len(output)):
                 for c in range(NUM_CLASSES):
-                    cv2.imwrite(os.path.join(OUT_PATH, VALIDATION_NAME, meta['img_id'][i] + '.png'),
+                    cv2.imwrite(os.path.join(OUT_PATH, VALIDATION_NAME, str(c), meta['img_id'][i] + '.png'),
                                 (output[i, c] * 255).astype('uint8'))
 
     print('IoU: %.4f' % iou_avg_meter.avg)
