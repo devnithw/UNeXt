@@ -1,5 +1,5 @@
 model_name: 'UNext'
-batch_size: 16
+batch_size: 64
 num_workers: 0
 num_classes: 1
 deep_supervision: false
