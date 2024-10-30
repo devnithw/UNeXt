@@ -5,6 +5,19 @@ import torch
 import torch.utils.data
 
 class BUSIDataset(torch.utils.data.Dataset):
+    """
+    Custom dataset for Breast Ultrasound Images Dataset (BUSI). Data should be included
+    as the following structure.
+    data/
+    ├── images/
+    │   ├── 001.png
+    │   ├── 002.png
+    ├── masks/
+    │   ├── 0/
+    │   |   ├── 001.png
+    |   |   ├── 002.png
+    """
+    
     def __init__(self, img_ids, img_dir, mask_dir, img_ext, mask_ext, num_classes, transform=None):
         self.img_ids = img_ids
         self.img_dir = img_dir
