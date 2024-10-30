@@ -9,7 +9,7 @@ from albumentations.augmentations import transforms
 from albumentations.core.composition import Compose
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
-
+import argparse
 import models
 from dataset import BUSIDataset
 from metrics import iou_score
@@ -17,7 +17,13 @@ from utils import AverageMeter
 from albumentations import RandomRotate90,Resize, HorizontalFlip
 import time
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Set device
+if torch.cuda.is_available():
+    device = torch.device('cuda')
+elif torch.backends.mps.is_available():
+    device = torch.device('mps')
+else:
+    device = torch.device('cpu')
 
 # Load configuration from YAML
 with open('config.yaml', 'r') as f:
@@ -49,18 +55,23 @@ INPUT_H = config['input_h']
 TRANSFORM_FLIP_PROBABILITY = config['transform_flip_probability']
 OUT_PATH = config['output_path']
 
-MODEL_LOAD_PATH = f'models/{MODEL_NAME}/model2.pth'
-VALIDATION_NAME = 'UNext1'
+# Argument parsing
+parser = argparse.ArgumentParser(description='Validation script for BUSI Dataset')
+parser.add_argument('--experiment_name', type=str, required=True, help='Name of the experiment')
+parser.add_argument('--load_model', type=str, help='Number of epochs to train')
+
+args = parser.parse_args()
+
+MODEL_LOAD_PATH = f'models/saved_models/{args.load_model}.pth'
+VALIDATION_NAME = f'{args.experiment_name}'
 
 
 def main():
 
-    '''
-    print('-'*20)
-    for key in config.keys():
-        print('%s: %s' % (key, str(config[key])))
-    print('-'*20)
-    '''
+    #print config information
+    for key, value in config.items():
+        print(f'{key}: {value}')
+    print(f"device: {device}")
 
     cudnn.benchmark = True
 
