@@ -1,9 +1,7 @@
 import argparse
 import torch.nn as nn
 
-class qkv_transform(nn.Conv1d):
-    """Conv1d for qkv_transform"""
-
+# Utility function to convert string to boolean
 def str2bool(v):
     if v.lower() in ['true', 1]:
         return True
@@ -12,10 +10,9 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
-
+# Utility function to count number of trainable parameters in a model
 def count_params(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
