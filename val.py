@@ -15,7 +15,7 @@ from metrics import iou_score
 from utils import AverageMeter
 from albumentations import RandomRotate90,Resize, HorizontalFlip
 import time
-import losses
+from loss import BCEDiceLoss
 from model import UNext
 
 # Set device
@@ -32,7 +32,7 @@ with open('config.yaml', 'r') as f:
 
 # Assign loaded configuration to variables
 MODEL_NAME = config['model_name']
-LOSS_FUNCTION = losses.BCEDiceLoss()
+LOSS_FUNCTION = BCEDiceLoss()
 MODEL = model.UNext
 BATCH_SIZE = config['batch_size']
 NUM_WORKERS = config['num_workers']
@@ -61,13 +61,13 @@ OUT_PATH = config['output_path']
 
 # Argument parsing
 parser = argparse.ArgumentParser(description='Validation script for BUSI Dataset')
-parser.add_argument('--experiment_name', type=str, required=True, help='Name of the experiment')
+parser.add_argument('--name', type=str, required=True, help='Name of the experiment')
 parser.add_argument('--load_model', type=str, help='Number of epochs to train')
 
 args = parser.parse_args()
 
 MODEL_LOAD_PATH = f'models/saved_models/{args.load_model}.pth'
-VALIDATION_NAME = f'{args.experiment_name}'
+VALIDATION_NAME = f'{args.name}'
 
 def main():
 

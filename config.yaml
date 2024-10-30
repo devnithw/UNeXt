@@ -15,8 +15,8 @@ scheduler_factor: 0.1
 scheduler_patience: 2
 scheduler_milestones: '1,2'
 scheduler_gamma: 0.6667
-data_path: 'D:/Projects/UNeXt/datasets/busi'
-output_path: 'D:/Projects/UNeXt/output/'
+data_path: './data/busi'
+output_path: './output/'
 early_stopping: -1
 input_w: 256
 input_h: 256

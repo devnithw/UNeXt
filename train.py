@@ -12,7 +12,7 @@ from torch.optim import lr_scheduler
 from tqdm import tqdm
 import model
 import yaml
-import losses
+from loss import BCEDiceLoss
 from dataset import BUSIDataset
 from metrics import iou_score
 from utils import AverageMeter
@@ -26,7 +26,7 @@ with open('config.yaml', 'r') as f:
 
 # Argument parsing
 parser = argparse.ArgumentParser(description='Training script for BUSI Dataset')
-parser.add_argument('--experiment_name', type=str, required=True, help='Name of the experiment')
+parser.add_argument('--name', type=str, required=True, help='Name of the experiment')
 parser.add_argument('--epochs', type=int, default=config.get('epochs', 50), help='Number of epochs to train')
 parser.add_argument('--learning_rate', type=float, default=config.get('learning_rate', 0.001), help='Initial learning rate')
 parser.add_argument('--batch_size', type=int, default=config.get('batch_size', 32), help='Batch size for training and validation')
@@ -34,12 +34,12 @@ parser.add_argument('--batch_size', type=int, default=config.get('batch_size', 3
 args = parser.parse_args()
 
 # Assign loaded configuration and argument values to variables
-EXPERIMENT_NAME = args.experiment_name
+EXPERIMENT_NAME = args.name
 EPOCHS = args.epochs
 LEARNING_RATE = args.learning_rate
 BATCH_SIZE = args.batch_size
 MODEL_NAME = config['model_name']
-LOSS_FUNCTION = losses.BCEDiceLoss()
+LOSS_FUNCTION = BCEDiceLoss()
 MODEL = model.UNext
 NUM_WORKERS = config['num_workers']
 NUM_CLASSES = config['num_classes']

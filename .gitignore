@@ -1,12 +1,7 @@
-
 .DS_Store
-/busi
 __pycache__
-/outputs
 .ipynb_checkpoints
-UNeXt_results_visualize.ipynb
-/datasets
-/test_utils.ipynb
 /output
 /test.py
-/changes_to_original.txt
+/models
+/data
