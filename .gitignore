@@ -1,3 +1,6 @@
 .DS_Store
 /busi
 __pycache__
+/outputs
+.ipynb_checkpoints
+UNeXt_results_visualize.ipynb

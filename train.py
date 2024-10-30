@@ -34,7 +34,7 @@ else:
     device = torch.device('cpu')
 
 # Experiment name
-EXP_NAME = "dev-2"
+EXP_NAME = "dev-3"
 
 # Dataset
 DATA_DIR = 'busi'

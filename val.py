@@ -11,8 +11,7 @@ from albumentations.core.composition import Compose
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-import archs
-from dataset import Dataset
+from dataset import BUSIDataset
 from metrics import iou_score
 from utils import AverageMeter
 from albumentations import RandomRotate90,Resize
@@ -27,39 +26,40 @@ elif torch.cuda.is_available():
 else:
     device = torch.device('cpu')
 
+EXP_NAME = 'dev-2'
+
 def main():
     # Load model
     model = UNext(num_classes=1)
     model = model.to(device)
 
     # Data loading code
-    img_ids = glob(os.path.join('busi', 'images', '*' + config['img_ext']))
+    img_ids = glob(os.path.join('busi', 'images', '*' + '.png'))
     img_ids = [os.path.splitext(os.path.basename(p))[0] for p in img_ids]
 
     _, val_img_ids = train_test_split(img_ids, test_size=0.2, random_state=41)
 
-    model.load_state_dict(torch.load('models/%s/model.pth' %
-                                     config['name']))
+    model.load_state_dict(torch.load(f'models/model-{EXP_NAME}.pth'))
     model.eval()
 
     val_transform = Compose([
-        Resize(config['input_h'], config['input_w']),
+        Resize(256, 256),
         transforms.Normalize(),
     ])
 
-    val_dataset = Dataset(
+    val_dataset = BUSIDataset(
         img_ids=val_img_ids,
-        img_dir=os.path.join('inputs', config['dataset'], 'images'),
-        mask_dir=os.path.join('inputs', config['dataset'], 'masks'),
-        img_ext=config['img_ext'],
-        mask_ext=config['mask_ext'],
-        num_classes=config['num_classes'],
+        img_dir=os.path.join('busi', 'images'),
+        mask_dir=os.path.join('busi', 'masks'),
+        img_ext='.png',
+        mask_ext='.png',
+        num_classes=1,
         transform=val_transform)
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
-        batch_size=config['batch_size'],
+        batch_size=16,
         shuffle=False,
-        num_workers=config['num_workers'],
+        num_workers=1,
         drop_last=False)
 
     iou_avg_meter = AverageMeter()
@@ -68,13 +68,13 @@ def main():
     cput = AverageMeter()
 
     count = 0
-    for c in range(config['num_classes']):
-        os.makedirs(os.path.join('outputs', config['name'], str(c)), exist_ok=True)
+    for c in range(1):
+        os.makedirs(os.path.join('outputs', EXP_NAME, str(c)), exist_ok=True)
     with torch.no_grad():
         for input, target, meta in tqdm(val_loader, total=len(val_loader)):
-            input = input.cuda()
-            target = target.cuda()
-            model = model.cuda()
+            input = input.to(device)
+            target = target.to(device)
+            model = model.to(device)
             # compute output
             output = model(input)
 
@@ -88,8 +88,8 @@ def main():
             output[output<0.5]=0
 
             for i in range(len(output)):
-                for c in range(config['num_classes']):
-                    cv2.imwrite(os.path.join('outputs', config['name'], str(c), meta['img_id'][i] + '.jpg'),
+                for c in range(1):
+                    cv2.imwrite(os.path.join('outputs', EXP_NAME, str(c), meta['img_id'][i] + '.jpg'),
                                 (output[i, c] * 255).astype('uint8'))
 
     print('IoU: %.4f' % iou_avg_meter.avg)
