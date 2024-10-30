@@ -4,12 +4,18 @@ import torch.nn.functional as F
 
 
 def iou_score(output, target):
-    smooth = 1e-5
+    """
+    Computes the intersection over union (IoU) score.
+    """
+    smooth = 1e-5 # Avoid division by zero
 
+    # Bring data to CPU
     if torch.is_tensor(output):
         output = torch.sigmoid(output).data.cpu().numpy()
     if torch.is_tensor(target):
         target = target.data.cpu().numpy()
+    
+    # Binarize the output
     output_ = output > 0.5
     target_ = target > 0.5
     intersection = (output_ & target_).sum()
@@ -20,6 +26,9 @@ def iou_score(output, target):
 
 
 def dice_coef(output, target):
+    """
+    Computes the Dice coefficient.
+    """
     smooth = 1e-5
 
     output = torch.sigmoid(output).view(-1).data.cpu().numpy()
