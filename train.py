@@ -24,12 +24,22 @@ from albumentations import RandomRotate90, Resize, HorizontalFlip
 with open('config.yaml', 'r') as f:
     config = yaml.safe_load(f)
 
+# Set device
+if torch.cuda.is_available():
+    device = torch.device('cuda')
+elif torch.backends.mps.is_available():
+    device = torch.device('mps')
+else:
+    device = torch.device('cpu')
+
 # Argument parsing
 parser = argparse.ArgumentParser(description='Training script for BUSI Dataset')
 parser.add_argument('--name', type=str, required=True, help='Name of the experiment')
-parser.add_argument('--epochs', type=int, default=config.get('epochs', 50), help='Number of epochs to train')
+parser.add_argument('--epochs', type=int, default=config.get('epochs', 100), help='Number of epochs to train')
 parser.add_argument('--learning_rate', type=float, default=config.get('learning_rate', 0.001), help='Initial learning rate')
-parser.add_argument('--batch_size', type=int, default=config.get('batch_size', 32), help='Batch size for training and validation')
+parser.add_argument('--batch_size', type=int, default=config.get('batch_size', 16), help='Batch size for training and validation')
+parser.add_argument('--device', type=str, default=device, help='Model name to use for training')
+parser.add_argument('--num_workers', type=int, default=config.get('num_workers', 0), help='Number of workers for data loading')
 
 args = parser.parse_args()
 
@@ -38,6 +48,7 @@ EXPERIMENT_NAME = args.name
 EPOCHS = args.epochs
 LEARNING_RATE = args.learning_rate
 BATCH_SIZE = args.batch_size
+device = args.device
 MODEL_NAME = config['model_name']
 LOSS_FUNCTION = BCEDiceLoss()
 MODEL = model.UNext
@@ -60,6 +71,7 @@ INPUT_W = config['input_w']
 INPUT_H = config['input_h']
 TRANSFORM_FLIP_PROBABILITY = config['transform_flip_probability']
 
+
 # Define save paths based on experiment name
 MODEL_SAVE_PATH = f'models/saved_models/model_{EXPERIMENT_NAME}.pth'
 LOG_SAVE_PATH = f'models/loss_history/log_{EXPERIMENT_NAME}.csv'
@@ -69,13 +81,7 @@ MODEL_SAVE_PATH = f'models/saved_models/model_{EXPERIMENT_NAME}.pth'
 # Path to save the losses and accuracy
 LOG_SAVE_PATH = f'models/loss_history/log_{EXPERIMENT_NAME}.csv'
 
-# Set device
-if torch.cuda.is_available():
-    device = torch.device('cuda')
-elif torch.backends.mps.is_available():
-    device = torch.device('mps')
-else:
-    device = torch.device('cpu')
+
 
 # args = parser.parse_args()
 def train(train_loader, model, criterion, optimizer):

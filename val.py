@@ -30,51 +30,31 @@ else:
 with open('config.yaml', 'r') as f:
     config = yaml.safe_load(f)
 
+# Argument parsing
+parser = argparse.ArgumentParser(description='Validation script for BUSI Dataset')
+parser.add_argument('--name', type=str, required=True, help='Name of the experiment')
+parser.add_argument('--load_model', required=True, type=str, help='Name of the model')
+parser.add_argument('--device', type=str, default=device, help='Model name to use for training')
+
+args = parser.parse_args()
+
 # Assign loaded configuration to variables
-MODEL_NAME = config['model_name']
-LOSS_FUNCTION = BCEDiceLoss()
 MODEL = model.UNext
+device = args.device
 BATCH_SIZE = config['batch_size']
 NUM_WORKERS = config['num_workers']
 NUM_CLASSES = config['num_classes']
 DEEP_SUPERVISION = config['deep_supervision']
 INPUT_CHANNELS = config['input_channels']
-OPTIMIZER = config['optimizer']
-LEARNING_RATE = config['learning_rate']
-WEIGHT_DECAY = config['weight_decay']
-MOMENTUM = config['momentum']
-SCHEDULER = config['scheduler']
-EPOCHS = config['epochs']
-MIN_LEARNING_RATE = float(config['min_learning_rate'])
-SCHEDULER_FACTOR = config['scheduler_factor']
-SCHEDULER_PATIENCE = config['scheduler_patience']
-SCHEDULER_MILESTONES = config['scheduler_milestones']
-SCHEDULER_GAMMA = config['scheduler_gamma']
 DATA_PATH = config['data_path']
-EARLY_STOPPING = config['early_stopping']
 INPUT_W = config['input_w']
 INPUT_H = config['input_h']
-TRANSFORM_FLIP_PROBABILITY = config['transform_flip_probability']
 OUT_PATH = config['output_path']
 
-
-
-# Argument parsing
-parser = argparse.ArgumentParser(description='Validation script for BUSI Dataset')
-parser.add_argument('--name', type=str, required=True, help='Name of the experiment')
-parser.add_argument('--load_model', required=True, type=str, help='Name of the model')
-
-args = parser.parse_args()
-
-MODEL_LOAD_PATH = f'models/saved_models/{args.load_model}.pth'
+MODEL_LOAD_PATH = f'models/saved_models/model_{args.load_model}.pth'
 VALIDATION_NAME = f'{args.name}'
 
 def main():
-
-    #print config information
-    for key, value in config.items():
-        print(f'{key}: {value}')
-    print(f"device: {device}")
 
     cudnn.benchmark = True
 
