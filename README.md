@@ -13,6 +13,10 @@
 
 The **UNeXt** is lightweight, more efficient segmentation architecture that maintains state of the art accuracy. The UNeXt paper proposes a hybrid model that combines the strengths of convolutional layers with MLP layers to enhance feature extraction, all while reducing computational costs. This project aims to implement and replicate  the results of the the UNeXt model as a part of EN3160 Image Processing and Machine Vision module.
 
+## Model Architecture
+The following diagram shows the architecture of the UNeXt model.
+
+![model_image](https://jeya-maria-jose.github.io/UNext-web/resources/fastunet-arch.png)
 
 ## Installation
 
