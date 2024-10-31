@@ -75,7 +75,7 @@ def main():
 
     _, val_img_ids = train_test_split(img_ids, test_size=0.2, random_state=41)
 
-    model.load_state_dict(torch.load(MODEL_LOAD_PATH))
+    model.load_state_dict(torch.load(MODEL_LOAD_PATH, map_location=torch.device(args.device)))
     model.eval()
 
     val_transform = Compose([

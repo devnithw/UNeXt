@@ -22,6 +22,10 @@ os.makedirs('exported_models', exist_ok=True)
 # Load the pretrained weights
 model.load_state_dict(torch.load(MODEL_LOAD_PATH, map_location=torch.device('cpu')))
 
+# Calculate the total number of parameters
+total_params = sum(p.numel() for p in model.parameters())
+print(f"Total number of parameters: {total_params}")
+
 # Input to the model
 model.eval()
 # Dummy input
