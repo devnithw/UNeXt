@@ -58,6 +58,14 @@ VALIDATION_NAME = f'{args.name}'
 
 def main():
 
+    # Print validation information
+    print("Post processing using:")
+    for arg in vars(args):
+        if arg == 'load_model':
+            print(f"{arg}: model_{getattr(args, arg)}.pth")
+        else:
+            print(f"{arg}: {getattr(args, arg)}")
+
     cudnn.benchmark = True
 
     # create model
@@ -137,7 +145,7 @@ def main():
 
             for i in range(len(output)):
                 for c in range(NUM_CLASSES):
-                    cv2.imwrite(os.path.join(OUT_PATH, VALIDATION_NAME, str(c), meta['img_id'][i] + '.jpg'),
+                    cv2.imwrite(os.path.join(OUT_PATH, VALIDATION_NAME, str(c), meta['img_id'][i] + '.png'),
                                 (output[i, c] * 255).astype('uint8'))
 
     print('IoU: %.4f' % iou_avg_meter.avg)

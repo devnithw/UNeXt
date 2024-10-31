@@ -56,6 +56,14 @@ VALIDATION_NAME = f'{args.name}'
 
 def main():
 
+    # Print validation information
+    print("Post processing using:")
+    for arg in vars(args):
+        if arg == 'load_model':
+            print(f"{arg}: model_{getattr(args, arg)}.pth")
+        else:
+            print(f"{arg}: {getattr(args, arg)}")
+
     cudnn.benchmark = True
 
     model = MODEL(num_classes=NUM_CLASSES, deep_supervision=DEEP_SUPERVISION, input_channels=INPUT_CHANNELS)
