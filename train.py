@@ -52,7 +52,7 @@ device = torch.device(args.device)
 MODEL_NAME = config['model_name']
 LOSS_FUNCTION = BCEDiceLoss()
 MODEL = model.UNext
-NUM_WORKERS = config['num_workers']
+NUM_WORKERS = args.num_workers
 NUM_CLASSES = config['num_classes']
 DEEP_SUPERVISION = config['deep_supervision']
 INPUT_CHANNELS = config['input_channels']
@@ -176,10 +176,10 @@ def main():
     os.makedirs('models/saved_models', exist_ok=True)
     os.makedirs('models/loss_history', exist_ok=True)
 
-    #print config information
-    for key, value in config.items():
-        print(f'{key}: {value}')
-    print(f"device: {device}")
+    # Print training information
+    print("Training using:")
+    for arg in vars(args):
+        print(f"{arg}: {getattr(args, arg)}")
 
     # loss function
     criterion = LOSS_FUNCTION.to(device)
