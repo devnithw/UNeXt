@@ -177,7 +177,7 @@ def main():
     os.makedirs('models/loss_history', exist_ok=True)
 
     # Print training information
-    print("Training using:")
+    print("Training using below:")
     for arg in vars(args):
         print(f"{arg}: {getattr(args, arg)}")
 
