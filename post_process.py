@@ -41,7 +41,7 @@ args = parser.parse_args()
 # Assign loaded configuration to variables
 MODEL_NAME = config['model_name']
 MODEL = model.UNext
-device = args.device
+device = torch.device(args.device)
 BATCH_SIZE = config['batch_size']
 NUM_WORKERS = config['num_workers']
 NUM_CLASSES = config['num_classes']
