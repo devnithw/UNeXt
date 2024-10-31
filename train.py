@@ -76,11 +76,6 @@ TRANSFORM_FLIP_PROBABILITY = config['transform_flip_probability']
 MODEL_SAVE_PATH = f'models/saved_models/model_{EXPERIMENT_NAME}.pth'
 LOG_SAVE_PATH = f'models/loss_history/log_{EXPERIMENT_NAME}.csv'
 
-# Enter the path to save the model 
-MODEL_SAVE_PATH = f'models/saved_models/model_{EXPERIMENT_NAME}.pth'
-# Path to save the losses and accuracy
-LOG_SAVE_PATH = f'models/loss_history/log_{EXPERIMENT_NAME}.csv'
-
 
 
 # args = parser.parse_args()
