@@ -6,3 +6,4 @@ __pycache__
 /data
 /models
 /best_models
+plot_results.ipynb
