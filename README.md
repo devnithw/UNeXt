@@ -63,7 +63,17 @@ Refer to the dataset provider’s terms and conditions for use.
 
 ## Results
 
-todo
+These results were obtained from the best model we trained in our reimplementation of the UNeXt paper.
+
+| Metric                            | Authors' Results (BUSI)  | Our Results               |
+|-----------------------------------|--------------------------|---------------------------|
+| **Dice Coefficient (F1 Score)**   | 79.37 ± 0.57             | 85.89                     |
+| **IoU (Intersection over Union)** | 66.95 ± 1.22             | 75.48                     |
+| **Parameter Count**               | 1.47 M                   | 1.4719 M                  |
+| **Inference Speed (per image)**   | 25 ms                    | 21.45 ms                  |
+| **GFLOPs**                        | 0.57                     | 0.573                     |
+| **Dataset**                       | BUSI                     | BUSI                      |
+
 
 ## Video-Segmentation
 Using the UNeXt's lightweight structure we inferenced on  Breast Ultrasound video footage to achieve real time segmentation at 40 fps. We also tested this on a Raspberry Pi 4 model B with 2 GB RAM, which resulted in a segmentation at 5 fps. We used the [Breast Ultrasound Video Dataset](https://paperswithcode.com/dataset/breast-lesion-detection-in-ultrasound-video) for video data. The result is as follows.
