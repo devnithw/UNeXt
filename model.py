@@ -6,8 +6,6 @@ from utils import *
 
 from timm.layers import DropPath, to_2tuple, trunc_normal_
 import math
-import pdb
-
 
 # Point-wise convolution
 def conv1x1(in_planes: int, out_planes: int, stride: int = 1) -> nn.Conv2d:
@@ -49,7 +47,6 @@ class shiftmlp(nn.Module):
                 m.bias.data.zero_()
 
     def forward(self, x, H, W):
-        # pdb.set_trace()
         B, N, C = x.shape
 
         xn = x.transpose(1, 2).view(B, C, H, W).contiguous()
