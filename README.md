@@ -25,7 +25,7 @@ To set up the environment, follow these steps:
 1. Clone this repository:
    ```bash
    git clone https://github.com/nadunnr/UNeXt.git
-   cd UNeXt-EN3160
+   cd UNeXt
    ```
 
 2. Set up the dataset as specified in [Dataset](#dataset):
